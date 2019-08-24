@@ -41,9 +41,9 @@ public class AccountManagement {
     return objectMapper.writeValueAsString(inMemoryStoreAccountToId.values());
   }
 
-  @Put(uri = CREATE_ACCOUNT, produces = APPLICATION_JSON, consumes = APPLICATION_JSON)
+  @Put(uri = CREATE_ACCOUNT, consumes = APPLICATION_JSON)
   @Version("1")
-  public HttpResponse<?> create(@Body final Account account) throws JsonProcessingException {
+  public HttpResponse<?> create(@Body final Account account) {
 
     Account previousAccount = inMemoryStoreAccountToId.putIfAbsent(account.getId(), account);
 
