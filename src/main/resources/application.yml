@@ -1,3 +1,7 @@
 micronaut:
   application:
     name: money-transfer
+  router:
+    versioning:
+      enabled: true
+      default-version: 1
