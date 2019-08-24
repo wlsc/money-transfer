@@ -48,6 +48,8 @@ dependencies {
     implementation "io.micronaut:micronaut-http-server-netty"
     implementation "io.micronaut:micronaut-http-client"
     runtimeOnly "ch.qos.logback:logback-classic:${logbackVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
 }
 
 test {
@@ -60,6 +62,8 @@ test {
         testAnnotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
         testAnnotationProcessor "io.micronaut:micronaut-inject-java"
         testImplementation "io.micronaut.test:micronaut-test-junit5"
+        testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+        testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     }
 }
 
