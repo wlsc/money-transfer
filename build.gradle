@@ -85,7 +85,7 @@ test {
     useJUnitPlatform()
 }
 
-tasks.withType(JavaCompile){
+tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
     options.compilerArgs.add('-parameters')
 }
@@ -103,10 +103,12 @@ checkstyle {
 
 spotbugs {
     toolVersion = "${spotbugsVersion}"
+    spotbugsTest.enabled = false
 }
 
 pmd {
     toolVersion = "${pmdVersion}"
+    pmdTest.enabled = false
     incrementalAnalysis = true
 }
 

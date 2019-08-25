@@ -1,9 +1,8 @@
 package de.wlsc.model;
 
+import java.util.Currency;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.Currency;
 
 @Value
 @Builder(toBuilder = true)

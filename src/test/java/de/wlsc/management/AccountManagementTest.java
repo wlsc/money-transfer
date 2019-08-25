@@ -1,30 +1,5 @@
 package de.wlsc.management;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.wlsc.model.Account;
-import de.wlsc.model.Customer;
-import de.wlsc.model.MoneyTransfer;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.HttpStatus;
-import io.micronaut.http.client.HttpClient;
-import io.micronaut.http.client.annotation.Client;
-import io.micronaut.http.client.exceptions.HttpClientResponseException;
-import io.micronaut.test.annotation.MicronautTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.Currency;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Supplier;
-
 import static de.wlsc.management.AccountManagement.CREATE_ACCOUNT;
 import static de.wlsc.management.AccountManagement.LIST_ACCOUNTS;
 import static de.wlsc.management.AccountManagement.REMOVE_ACCOUNTS;
@@ -43,6 +18,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.of;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.wlsc.model.Account;
+import de.wlsc.model.Customer;
+import de.wlsc.model.MoneyTransfer;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.client.HttpClient;
+import io.micronaut.http.client.annotation.Client;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
+import io.micronaut.test.annotation.MicronautTest;
+import java.io.IOException;
+import java.util.Currency;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+import javax.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 @MicronautTest
 class AccountManagementTest {
 
@@ -58,44 +57,44 @@ class AccountManagementTest {
 
   private static Iterable<Arguments> transferMoney() {
     return asList(
-            of(createJohnsAccount(), createSilversAccount(), 25, OK, asList(createJohnsAccount(), createSilversAccount())),
-            of(createSilversAccount(), createJohnsAccount(), 99, OK, asList(createJohnsAccount(), createSilversAccount())),
-            of(createJohnsAccount(), createSilversAccount(), 100, OK, asList(createJohnsAccount(), createSilversAccount())),
-            of(createJohnsAccount(), createSilversAccount(), 500000, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
-            of(createSilversAccount(), createJohnsAccount(), -1245, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
-            of(createJohnsAccount(), createSilversAccount(), 1, BAD_REQUEST, asList(createJohnsAccount())),
-            of(createSilversAccount(), createJohnsAccount(), 1, BAD_REQUEST, asList(createSilversAccount()))
+        of(createJohnsAccount(), createSilversAccount(), 25, OK, asList(createJohnsAccount(), createSilversAccount())),
+        of(createSilversAccount(), createJohnsAccount(), 99, OK, asList(createJohnsAccount(), createSilversAccount())),
+        of(createJohnsAccount(), createSilversAccount(), 100, OK, asList(createJohnsAccount(), createSilversAccount())),
+        of(createJohnsAccount(), createSilversAccount(), 500000, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
+        of(createSilversAccount(), createJohnsAccount(), -1245, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
+        of(createJohnsAccount(), createSilversAccount(), 1, BAD_REQUEST, asList(createJohnsAccount())),
+        of(createSilversAccount(), createJohnsAccount(), 1, BAD_REQUEST, asList(createSilversAccount()))
     );
   }
 
   private static Account createJohnsAccount() {
     Customer john = Customer.builder()
-            .id("cust1")
-            .firstname("first")
-            .lastname("last")
-            .locale(GERMANY)
-            .build();
+        .id("cust1")
+        .firstname("first")
+        .lastname("last")
+        .locale(GERMANY)
+        .build();
     return Account.builder()
-            .id("acc1")
-            .amount(500)
-            .currency(Currency.getInstance(john.getLocale()))
-            .customer(john)
-            .build();
+        .id("acc1")
+        .amount(500)
+        .currency(Currency.getInstance(john.getLocale()))
+        .customer(john)
+        .build();
   }
 
   private static Account createSilversAccount() {
     Customer silver = Customer.builder()
-            .id("cust2")
-            .firstname("first")
-            .lastname("last")
-            .locale(GERMANY)
-            .build();
+        .id("cust2")
+        .firstname("first")
+        .lastname("last")
+        .locale(GERMANY)
+        .build();
     return Account.builder()
-            .id("acc2")
-            .amount(2000)
-            .currency(Currency.getInstance(silver.getLocale()))
-            .customer(silver)
-            .build();
+        .id("acc2")
+        .amount(2000)
+        .currency(Currency.getInstance(silver.getLocale()))
+        .customer(silver)
+        .build();
   }
 
   @BeforeEach
@@ -117,7 +116,7 @@ class AccountManagementTest {
     String accountPayload = objectMapper.writeValueAsString(johnsAccount);
 
     HttpResponse<String> actualResponse = client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
 
     assertThat(actualResponse.code()).isEqualTo(CREATED.getCode());
   }
@@ -130,9 +129,9 @@ class AccountManagementTest {
     String accountPayload = objectMapper.writeValueAsString(johnsAccount);
 
     client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
     HttpResponse<String> actualResponse = client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
 
     assertThat(actualResponse.code()).isEqualTo(NOT_MODIFIED.getCode());
   }
@@ -145,12 +144,12 @@ class AccountManagementTest {
     Account silversAccount = createSilversAccount();
 
     client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(johnsAccount)));
+        .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(johnsAccount)));
 
     assertThat(requestAccountsList()).hasSize(1);
 
     client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(silversAccount)));
+        .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(silversAccount)));
 
     assertThat(requestAccountsList()).hasSize(2);
 
@@ -170,24 +169,25 @@ class AccountManagementTest {
 
     registerExpectedAccounts(registeredAccounts);
 
-    MoneyTransfer moneyTransfer = createMoneyTransfer(sourceAccount, destinationAccount, expectedChangeOfAmount);
+    MoneyTransfer moneyTransfer = createMoneyTransfer(sourceAccount, destinationAccount,
+        expectedChangeOfAmount);
     String payload = objectMapper.writeValueAsString(moneyTransfer);
 
     HttpResponse<?> actualResponse = null;
     try {
       actualResponse = client.toBlocking()
-              .exchange(POST(TRANSFER_MONEY_FROM_TO_ACCOUNT, payload));
+          .exchange(POST(TRANSFER_MONEY_FROM_TO_ACCOUNT, payload));
 
       assertAccountHaveRightAmountOfMoney(sourceAccount, destinationAccount,
-              () -> sourceAccount.getAmount() - expectedChangeOfAmount,
-              () -> destinationAccount.getAmount() + expectedChangeOfAmount);
+          () -> sourceAccount.getAmount() - expectedChangeOfAmount,
+          () -> destinationAccount.getAmount() + expectedChangeOfAmount);
 
     } catch (HttpClientResponseException responseException) {
 
       actualResponse = responseException.getResponse();
       assertAccountHaveRightAmountOfMoney(sourceAccount, destinationAccount,
-              sourceAccount::getAmount,
-              destinationAccount::getAmount);
+          sourceAccount::getAmount,
+          destinationAccount::getAmount);
 
     } catch (Exception e) {
       fail("This line shouldn't be executed");
@@ -198,10 +198,10 @@ class AccountManagementTest {
   }
 
   private void assertAccountHaveRightAmountOfMoney(
-          final Account sourceAccount,
-          final Account destinationAccount,
-          final Supplier<Long> expectedSourceChangeOfMoney,
-          final Supplier<Long> expectedDestinationChangeOfMoney) throws Exception {
+      final Account sourceAccount,
+      final Account destinationAccount,
+      final Supplier<Long> expectedSourceChangeOfMoney,
+      final Supplier<Long> expectedDestinationChangeOfMoney) throws Exception {
 
     for (Account account : requestAccountsList()) {
       if (sourceAccount.getId().equals(account.getId())) {
@@ -220,7 +220,8 @@ class AccountManagementTest {
   }
 
   private List<Account> requestAccountsList() throws IOException {
-    return objectMapper.readValue(client.toBlocking().retrieve(GET(LIST_ACCOUNTS)), LIST_ACCOUNTS_REFERENCE);
+    return objectMapper.readValue(client.toBlocking()
+        .retrieve(GET(LIST_ACCOUNTS)), LIST_ACCOUNTS_REFERENCE);
   }
 
   private HttpResponse<?> removeAllAccounts() {
@@ -231,10 +232,10 @@ class AccountManagementTest {
                                             final Account toAccount,
                                             final long amount) {
     return MoneyTransfer.builder()
-            .id(UUID.randomUUID().toString())
-            .fromAccountId(fromAccount.getId())
-            .toAccountId(toAccount.getId())
-            .amount(amount)
-            .build();
+        .id(UUID.randomUUID().toString())
+        .fromAccountId(fromAccount.getId())
+        .toAccountId(toAccount.getId())
+        .amount(amount)
+        .build();
   }
 }
