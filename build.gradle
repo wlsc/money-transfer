@@ -30,7 +30,7 @@ idea {
 }
 
 version "0.1"
-group "hello.world"
+group "de.wlsc"
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -79,7 +79,7 @@ test {
 
 test.classpath += configurations.developmentOnly
 
-mainClassName = "hello.world.Application"
+mainClassName = "de.wlsc.Application"
 
 test {
     useJUnitPlatform()
