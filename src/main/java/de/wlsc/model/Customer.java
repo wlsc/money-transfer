@@ -6,7 +6,7 @@ import lombok.Value;
 import java.util.Locale;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class Customer {
 
   private final String id;

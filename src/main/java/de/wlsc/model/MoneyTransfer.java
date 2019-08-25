@@ -3,14 +3,12 @@ package de.wlsc.model;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.Currency;
-
 @Value
 @Builder(toBuilder = true)
-public class Account {
+public class MoneyTransfer {
 
   private final String id;
+  private final String fromAccountId;
+  private final String toAccountId;
   private final long amount;
-  private final Currency currency;
-  private final Customer customer;
 }
