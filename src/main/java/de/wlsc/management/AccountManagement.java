@@ -70,6 +70,10 @@ public class AccountManagement {
   @Version("1")
   synchronized public HttpResponse<?> transferMoneyFromToAccount(@Body final MoneyTransfer moneyTransfer) {
 
+    if (moneyTransfer.getAmount() < 0) {
+      return badRequest("we are not accepting negative money amounts");
+    }
+
     String sourceAccountId = moneyTransfer.getFromAccountId();
     String destinationAccountId = moneyTransfer.getToAccountId();
 
@@ -85,15 +89,17 @@ public class AccountManagement {
     Account destination = inMemoryStoreAccountToId.get(destinationAccountId);
 
     if ((source.getAmount() - moneyTransfer.getAmount()) < 0) {
-      return HttpResponse.unauthorized().body("Source account has not enough money to transfer");
+      return badRequest("Source account has not enough money to transfer");
     }
 
     Currency sourceCurrency = source.getCurrency();
     Currency destinationCurrency = destination.getCurrency();
-    long transferAmount = moneyTransfer.getAmount();
+    long transferAmount;
 
-    if (sourceCurrency != destinationCurrency) {
-      transferAmount = convertToDestinationCurrency(sourceCurrency, destinationCurrency, transferAmount);
+    if (sourceCurrency == destinationCurrency) {
+      transferAmount = moneyTransfer.getAmount();
+    } else {
+      transferAmount = convertToDestinationCurrency(sourceCurrency, destinationCurrency, moneyTransfer.getAmount());
     }
 
     Account sourceAfterWithdraw = source.toBuilder()

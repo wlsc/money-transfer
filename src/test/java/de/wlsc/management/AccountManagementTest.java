@@ -6,8 +6,10 @@ import de.wlsc.model.Account;
 import de.wlsc.model.Customer;
 import de.wlsc.model.MoneyTransfer;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static de.wlsc.management.AccountManagement.CREATE_ACCOUNT;
 import static de.wlsc.management.AccountManagement.LIST_ACCOUNTS;
@@ -30,12 +33,15 @@ import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpRequest.GET;
 import static io.micronaut.http.HttpRequest.POST;
 import static io.micronaut.http.HttpRequest.PUT;
+import static io.micronaut.http.HttpStatus.BAD_REQUEST;
 import static io.micronaut.http.HttpStatus.CREATED;
 import static io.micronaut.http.HttpStatus.NOT_MODIFIED;
 import static io.micronaut.http.HttpStatus.OK;
 import static java.util.Arrays.asList;
 import static java.util.Locale.GERMANY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.params.provider.Arguments.of;
 
 @MicronautTest
 class AccountManagementTest {
@@ -50,11 +56,15 @@ class AccountManagementTest {
   @Inject
   private ObjectMapper objectMapper;
 
-  private static Iterable<Arguments> transferAccounts() {
+  private static Iterable<Arguments> transferMoney() {
     return asList(
-            Arguments.of(createJohnsAccount(), createSilversAccount(), 25),
-            Arguments.of(createSilversAccount(), createJohnsAccount(), 99),
-            Arguments.of(createJohnsAccount(), createSilversAccount(), 100)
+            of(createJohnsAccount(), createSilversAccount(), 25, OK, asList(createJohnsAccount(), createSilversAccount())),
+            of(createSilversAccount(), createJohnsAccount(), 99, OK, asList(createJohnsAccount(), createSilversAccount())),
+            of(createJohnsAccount(), createSilversAccount(), 100, OK, asList(createJohnsAccount(), createSilversAccount())),
+            of(createJohnsAccount(), createSilversAccount(), 500000, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
+            of(createSilversAccount(), createJohnsAccount(), -1245, BAD_REQUEST, asList(createJohnsAccount(), createSilversAccount())),
+            of(createJohnsAccount(), createSilversAccount(), 1, BAD_REQUEST, asList(createJohnsAccount())),
+            of(createSilversAccount(), createJohnsAccount(), 1, BAD_REQUEST, asList(createSilversAccount()))
     );
   }
 
@@ -150,42 +160,63 @@ class AccountManagementTest {
   }
 
   @ParameterizedTest
-  @MethodSource("transferAccounts")
-  @DisplayName("Transfer money with no issues")
-  void transferMoneyWithNoIssues(final Account sourceAccount,
-                                 final Account destinationAccount,
-                                 final long expectedChangeOfAmount) throws Exception {
+  @MethodSource("transferMoney")
+  @DisplayName("Transfer money")
+  void transferMoney(final Account sourceAccount,
+                     final Account destinationAccount,
+                     final long expectedChangeOfAmount,
+                     final HttpStatus expectedHttpStatus,
+                     final List<Account> registeredAccounts) throws Exception {
 
-    registerExpectedAccounts(sourceAccount, destinationAccount);
+    registerExpectedAccounts(registeredAccounts);
 
     MoneyTransfer moneyTransfer = createMoneyTransfer(sourceAccount, destinationAccount, expectedChangeOfAmount);
     String payload = objectMapper.writeValueAsString(moneyTransfer);
-    HttpResponse<?> actualResponse = client.toBlocking()
-            .exchange(POST(TRANSFER_MONEY_FROM_TO_ACCOUNT, payload));
 
-    assertThat(actualResponse.code()).isEqualTo(OK.getCode());
-    assertAccountHaveRightAmountOfMoney(sourceAccount, destinationAccount, expectedChangeOfAmount);
+    HttpResponse<?> actualResponse = null;
+    try {
+      actualResponse = client.toBlocking()
+              .exchange(POST(TRANSFER_MONEY_FROM_TO_ACCOUNT, payload));
+
+      assertAccountHaveRightAmountOfMoney(sourceAccount, destinationAccount,
+              () -> sourceAccount.getAmount() - expectedChangeOfAmount,
+              () -> destinationAccount.getAmount() + expectedChangeOfAmount);
+
+    } catch (HttpClientResponseException responseException) {
+
+      actualResponse = responseException.getResponse();
+      assertAccountHaveRightAmountOfMoney(sourceAccount, destinationAccount,
+              sourceAccount::getAmount,
+              destinationAccount::getAmount);
+
+    } catch (Exception e) {
+      fail("This line shouldn't be executed");
+    }
+
+    assertThat(actualResponse).isNotNull();
+    assertThat(actualResponse.code()).isEqualTo(expectedHttpStatus.getCode());
   }
 
-  private void assertAccountHaveRightAmountOfMoney(final Account sourceAccount,
-                                                   final Account destinationAccount,
-                                                   long expectedChangeOfAmount) throws Exception {
+  private void assertAccountHaveRightAmountOfMoney(
+          final Account sourceAccount,
+          final Account destinationAccount,
+          final Supplier<Long> expectedSourceChangeOfMoney,
+          final Supplier<Long> expectedDestinationChangeOfMoney) throws Exception {
 
     for (Account account : requestAccountsList()) {
       if (sourceAccount.getId().equals(account.getId())) {
-        assertThat(account.getAmount()).isEqualTo(sourceAccount.getAmount() - expectedChangeOfAmount);
+        assertThat(account.getAmount()).isEqualTo(expectedSourceChangeOfMoney.get());
       }
       if (destinationAccount.getId().equals(account.getId())) {
-        assertThat(account.getAmount()).isEqualTo(destinationAccount.getAmount() + expectedChangeOfAmount);
+        assertThat(account.getAmount()).isEqualTo(expectedDestinationChangeOfMoney.get());
       }
     }
   }
 
-  private void registerExpectedAccounts(Account sourceAccount, Account destinationAccount) throws Exception {
-    client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(sourceAccount)));
-    client.toBlocking()
-            .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(destinationAccount)));
+  private void registerExpectedAccounts(final List<Account> accounts) throws Exception {
+    for (Account account : accounts) {
+      client.toBlocking().exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(account)));
+    }
   }
 
   private List<Account> requestAccountsList() throws IOException {
