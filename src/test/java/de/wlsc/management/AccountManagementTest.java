@@ -1,7 +1,6 @@
 package de.wlsc.management;
 
 import static de.wlsc.management.AccountManagement.ACCOUNTS;
-import static de.wlsc.management.AccountManagement.CREATE_ACCOUNT;
 import static de.wlsc.management.AccountManagement.TRANSFER_MONEY_FROM_TO_ACCOUNT;
 import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpRequest.GET;
@@ -115,7 +114,7 @@ class AccountManagementTest {
     String accountPayload = objectMapper.writeValueAsString(johnsAccount);
 
     HttpResponse<String> actualResponse = client.toBlocking()
-        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(ACCOUNTS, accountPayload));
 
     assertThat(actualResponse.code()).isEqualTo(CREATED.getCode());
   }
@@ -128,9 +127,9 @@ class AccountManagementTest {
     String accountPayload = objectMapper.writeValueAsString(johnsAccount);
 
     client.toBlocking()
-        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(ACCOUNTS, accountPayload));
     HttpResponse<String> actualResponse = client.toBlocking()
-        .exchange(PUT(CREATE_ACCOUNT, accountPayload));
+        .exchange(PUT(ACCOUNTS, accountPayload));
 
     assertThat(actualResponse.code()).isEqualTo(NOT_MODIFIED.getCode());
   }
@@ -143,12 +142,12 @@ class AccountManagementTest {
     Account silversAccount = createSilversAccount();
 
     client.toBlocking()
-        .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(johnsAccount)));
+        .exchange(PUT(ACCOUNTS, objectMapper.writeValueAsString(johnsAccount)));
 
     assertThat(requestAccountsList()).hasSize(1);
 
     client.toBlocking()
-        .exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(silversAccount)));
+        .exchange(PUT(ACCOUNTS, objectMapper.writeValueAsString(silversAccount)));
 
     assertThat(requestAccountsList()).hasSize(2);
 
@@ -214,7 +213,7 @@ class AccountManagementTest {
 
   private void registerExpectedAccounts(final List<Account> accounts) throws Exception {
     for (Account account : accounts) {
-      client.toBlocking().exchange(PUT(CREATE_ACCOUNT, objectMapper.writeValueAsString(account)));
+      client.toBlocking().exchange(PUT(ACCOUNTS, objectMapper.writeValueAsString(account)));
     }
   }
 

@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountManagement {
 
   static final String ACCOUNTS = "/accounts";
-  static final String CREATE_ACCOUNT = "/account/create";
   static final String TRANSFER_MONEY_FROM_TO_ACCOUNT = "/accounts/transfer";
 
   private static final Map<String, Account> IN_MEMORY_STORE_ACCOUNT_TO_ID = new ConcurrentHashMap<>();
@@ -50,7 +49,7 @@ public class AccountManagement {
     return objectMapper.writeValueAsString(IN_MEMORY_STORE_ACCOUNT_TO_ID.values());
   }
 
-  @Put(uri = CREATE_ACCOUNT, consumes = APPLICATION_JSON)
+  @Put(uri = ACCOUNTS, consumes = APPLICATION_JSON)
   @Version("1")
   public HttpResponse<?> create(@Body final Account account) {
 
