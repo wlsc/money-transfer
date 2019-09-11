@@ -1,8 +1,7 @@
 package de.wlsc.management;
 
+import static de.wlsc.management.AccountManagement.ACCOUNTS;
 import static de.wlsc.management.AccountManagement.CREATE_ACCOUNT;
-import static de.wlsc.management.AccountManagement.LIST_ACCOUNTS;
-import static de.wlsc.management.AccountManagement.REMOVE_ACCOUNTS;
 import static de.wlsc.management.AccountManagement.TRANSFER_MONEY_FROM_TO_ACCOUNT;
 import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpRequest.GET;
@@ -221,11 +220,11 @@ class AccountManagementTest {
 
   private List<Account> requestAccountsList() throws IOException {
     return objectMapper.readValue(client.toBlocking()
-        .retrieve(GET(LIST_ACCOUNTS)), LIST_ACCOUNTS_REFERENCE);
+        .retrieve(GET(ACCOUNTS)), LIST_ACCOUNTS_REFERENCE);
   }
 
   private HttpResponse<?> removeAllAccounts() {
-    return client.toBlocking().exchange(DELETE(REMOVE_ACCOUNTS).body(""));
+    return client.toBlocking().exchange(DELETE(ACCOUNTS).body(""));
   }
 
   private MoneyTransfer createMoneyTransfer(final Account fromAccount,

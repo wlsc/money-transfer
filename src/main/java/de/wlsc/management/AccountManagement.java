@@ -31,9 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("PMD.BeanMembersShouldSerialize")
 public class AccountManagement {
 
-  static final String LIST_ACCOUNTS = "/accounts";
+  static final String ACCOUNTS = "/accounts";
   static final String CREATE_ACCOUNT = "/account/create";
-  static final String REMOVE_ACCOUNTS = "/accounts/remove";
   static final String TRANSFER_MONEY_FROM_TO_ACCOUNT = "/accounts/transfer";
 
   private static final Map<String, Account> IN_MEMORY_STORE_ACCOUNT_TO_ID = new ConcurrentHashMap<>();
@@ -45,7 +44,7 @@ public class AccountManagement {
     this.objectMapper = objectMapper;
   }
 
-  @Get(uri = LIST_ACCOUNTS, produces = APPLICATION_JSON)
+  @Get(uri = ACCOUNTS, produces = APPLICATION_JSON)
   @Version("1")
   public String listAccounts() throws JsonProcessingException {
     return objectMapper.writeValueAsString(IN_MEMORY_STORE_ACCOUNT_TO_ID.values());
@@ -64,7 +63,7 @@ public class AccountManagement {
     return created("/account/" + account.getId());
   }
 
-  @Delete(REMOVE_ACCOUNTS)
+  @Delete(ACCOUNTS)
   @Version("1")
   public HttpResponse<?> removeAccounts() {
     IN_MEMORY_STORE_ACCOUNT_TO_ID.clear();
