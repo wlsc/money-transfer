@@ -9,6 +9,10 @@ import static io.micronaut.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.wlsc.management.exception.AccountAlreadyExistException;
+import de.wlsc.management.exception.AccountNotFoundException;
+import de.wlsc.management.exception.NegativeAmountTransferException;
+import de.wlsc.management.exception.NotEnoughMoneyException;
 import de.wlsc.model.Account;
 import de.wlsc.model.MoneyTransfer;
 import io.micronaut.core.version.annotation.Version;
@@ -16,114 +20,87 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
-import java.util.Currency;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @Slf4j
-@SuppressWarnings("PMD.BeanMembersShouldSerialize")
 public class AccountManagementEndpoint {
 
   static final String ACCOUNTS = "/accounts";
   static final String TRANSFER_MONEY_FROM_TO_ACCOUNT = "/accounts/transfer";
 
-  private static final Map<String, Account> IN_MEMORY_STORE_ACCOUNT_TO_ID = new ConcurrentHashMap<>();
-
+  private final AccountManagement accountManagement;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public AccountManagementEndpoint(final ObjectMapper objectMapper) {
+  public AccountManagementEndpoint(final AccountManagement accountManagement, final ObjectMapper objectMapper) {
+    this.accountManagement = accountManagement;
     this.objectMapper = objectMapper;
   }
 
   @Get(uri = ACCOUNTS, produces = APPLICATION_JSON)
   @Version("1")
   public String listAccounts() throws JsonProcessingException {
-    return objectMapper.writeValueAsString(IN_MEMORY_STORE_ACCOUNT_TO_ID.values());
+    return objectMapper.writeValueAsString(accountManagement.listAccounts());
   }
 
   @Put(uri = ACCOUNTS, consumes = APPLICATION_JSON)
   @Version("1")
   public HttpResponse<?> create(@Body final Account account) {
-
-    Account previousAccount = IN_MEMORY_STORE_ACCOUNT_TO_ID.putIfAbsent(account.getId(), account);
-
-    if (previousAccount != null) {
-      return notModified();
-    }
-
+    log.info("Requested account creation");
+    accountManagement.create(account);
+    log.info("Account {} created", account.getId());
     return created("/account/" + account.getId());
   }
 
   @Delete(ACCOUNTS)
   @Version("1")
   public HttpResponse<?> removeAccounts() {
-    IN_MEMORY_STORE_ACCOUNT_TO_ID.clear();
+    log.info("Requested removal of all accounts");
+    accountManagement.removeAccounts();
+    log.info("All accounts were removed");
     return status(OK);
   }
 
   @Post(uri = TRANSFER_MONEY_FROM_TO_ACCOUNT, consumes = APPLICATION_JSON)
   @Version("1")
-  synchronized public HttpResponse<?> transferMoneyFromToAccount(@Body final MoneyTransfer moneyTransfer) {
-
-    if (moneyTransfer.getAmount() < 0) {
-      return badRequest("we are not accepting negative money amounts");
-    }
-
-    String sourceAccountId = moneyTransfer.getFromAccountId();
-
-    if (!IN_MEMORY_STORE_ACCOUNT_TO_ID.containsKey(sourceAccountId)) {
-      return badRequest("no such account " + sourceAccountId + " found");
-    }
-
-    String destinationAccountId = moneyTransfer.getToAccountId();
-
-    if (!IN_MEMORY_STORE_ACCOUNT_TO_ID.containsKey(destinationAccountId)) {
-      return badRequest("no such account " + destinationAccountId + " found");
-    }
-
-    Account source = IN_MEMORY_STORE_ACCOUNT_TO_ID.get(sourceAccountId);
-
-    if ((source.getAmount() - moneyTransfer.getAmount()) < 0) {
-      return badRequest("Source account has not enough money to transfer");
-    }
-
-    Currency sourceCurrency = source.getCurrency();
-    Account destination = IN_MEMORY_STORE_ACCOUNT_TO_ID.get(destinationAccountId);
-    Currency destinationCurrency = destination.getCurrency();
-    long transferAmount;
-
-    if (Objects.equals(sourceCurrency, destinationCurrency)) {
-      transferAmount = moneyTransfer.getAmount();
-    } else {
-      transferAmount = convertToDestinationCurrency(sourceCurrency, destinationCurrency, moneyTransfer.getAmount());
-    }
-
-    Account sourceAfterWithdraw = source.toBuilder()
-        .amount(source.getAmount() - moneyTransfer.getAmount())
-        .build();
-    Account destinationAfterDeposit = destination.toBuilder()
-        .amount(destination.getAmount() + transferAmount)
-        .build();
-
-    IN_MEMORY_STORE_ACCOUNT_TO_ID.put(sourceAfterWithdraw.getId(), sourceAfterWithdraw);
-    IN_MEMORY_STORE_ACCOUNT_TO_ID.put(destinationAfterDeposit.getId(), destinationAfterDeposit);
-
+  public HttpResponse<?> transferMoney(@Body final MoneyTransfer moneyTransfer) {
+    log.info("Initializing money transfer from {} to {} account...", moneyTransfer.getFromAccountId(), moneyTransfer.getToAccountId());
+    accountManagement.transferMoney(moneyTransfer);
+    log.info("Money transfer from {} to {} account was successful", moneyTransfer.getFromAccountId(), moneyTransfer.getToAccountId());
     return HttpResponse.ok();
   }
 
-  private long convertToDestinationCurrency(final Currency sourceCurrency,
-                                            final Currency destinationCurrency,
-                                            final long transferAmount) {
-    // #TODO: here implementation of conversion from source currency into destination's currency 
-    // for the sake of simplicity remains unimplemented
-    return transferAmount;
+  @Error(AccountAlreadyExistException.class)
+  public HttpResponse<?> onAccountNotFound(final AccountAlreadyExistException e) {
+    log.info(e.getMessage());
+    log.debug(e.getMessage(), e);
+    return notModified();
+  }
+
+  @Error(NegativeAmountTransferException.class)
+  public HttpResponse<?> onNegativeAmountTransfer(final NegativeAmountTransferException e) {
+    return respondWithBadRequest(e);
+  }
+
+  @Error(AccountNotFoundException.class)
+  public HttpResponse<?> onAccountNotFound(final AccountNotFoundException e) {
+    return respondWithBadRequest(e);
+  }
+
+  @Error(NotEnoughMoneyException.class)
+  public HttpResponse<?> onNotEnoughMoney(final NotEnoughMoneyException e) {
+    return respondWithBadRequest(e);
+  }
+
+  private HttpResponse<?> respondWithBadRequest(final Exception e) {
+    log.info(e.getMessage());
+    log.debug(e.getMessage(), e);
+    return badRequest(e.getMessage());
   }
 }

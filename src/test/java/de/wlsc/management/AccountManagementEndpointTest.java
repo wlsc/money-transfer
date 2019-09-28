@@ -2,6 +2,9 @@ package de.wlsc.management;
 
 import static de.wlsc.management.AccountManagementEndpoint.ACCOUNTS;
 import static de.wlsc.management.AccountManagementEndpoint.TRANSFER_MONEY_FROM_TO_ACCOUNT;
+import static de.wlsc.management.AccountTransferCreator.createJohnsAccount;
+import static de.wlsc.management.AccountTransferCreator.createMoneyTransfer;
+import static de.wlsc.management.AccountTransferCreator.createSilversAccount;
 import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpRequest.GET;
 import static io.micronaut.http.HttpRequest.POST;
@@ -11,7 +14,6 @@ import static io.micronaut.http.HttpStatus.CREATED;
 import static io.micronaut.http.HttpStatus.NOT_MODIFIED;
 import static io.micronaut.http.HttpStatus.OK;
 import static java.util.Arrays.asList;
-import static java.util.Locale.GERMANY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.of;
@@ -19,7 +21,6 @@ import static org.junit.jupiter.params.provider.Arguments.of;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.wlsc.model.Account;
-import de.wlsc.model.Customer;
 import de.wlsc.model.MoneyTransfer;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -28,9 +29,7 @@ import io.micronaut.http.client.annotation.Client;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.annotation.MicronautTest;
 import java.io.IOException;
-import java.util.Currency;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +40,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @MicronautTest
+@DisplayName("Account management endpoint")
 class AccountManagementEndpointTest {
 
   private static final TypeReference<List<Account>> LIST_ACCOUNTS_REFERENCE = new TypeReference<>() {
@@ -63,36 +63,6 @@ class AccountManagementEndpointTest {
         of(createJohnsAccount(), createSilversAccount(), 1, BAD_REQUEST, asList(createJohnsAccount())),
         of(createSilversAccount(), createJohnsAccount(), 1, BAD_REQUEST, asList(createSilversAccount()))
     );
-  }
-
-  private static Account createJohnsAccount() {
-    Customer john = Customer.builder()
-        .id("cust1")
-        .firstname("first")
-        .lastname("last")
-        .locale(GERMANY)
-        .build();
-    return Account.builder()
-        .id("acc1")
-        .amount(500)
-        .currency(Currency.getInstance(john.getLocale()))
-        .customer(john)
-        .build();
-  }
-
-  private static Account createSilversAccount() {
-    Customer silver = Customer.builder()
-        .id("cust2")
-        .firstname("first")
-        .lastname("last")
-        .locale(GERMANY)
-        .build();
-    return Account.builder()
-        .id("acc2")
-        .amount(2000)
-        .currency(Currency.getInstance(silver.getLocale()))
-        .customer(silver)
-        .build();
   }
 
   @BeforeEach
@@ -167,8 +137,7 @@ class AccountManagementEndpointTest {
 
     registerExpectedAccounts(registeredAccounts);
 
-    MoneyTransfer moneyTransfer = createMoneyTransfer(sourceAccount, destinationAccount,
-        expectedChangeOfAmount);
+    MoneyTransfer moneyTransfer = createMoneyTransfer(sourceAccount, destinationAccount, expectedChangeOfAmount);
     String payload = objectMapper.writeValueAsString(moneyTransfer);
 
     HttpResponse<?> actualResponse = null;
@@ -224,16 +193,5 @@ class AccountManagementEndpointTest {
 
   private HttpResponse<?> removeAllAccounts() {
     return client.toBlocking().exchange(DELETE(ACCOUNTS).body(""));
-  }
-
-  private MoneyTransfer createMoneyTransfer(final Account fromAccount,
-                                            final Account toAccount,
-                                            final long amount) {
-    return MoneyTransfer.builder()
-        .id(UUID.randomUUID().toString())
-        .fromAccountId(fromAccount.getId())
-        .toAccountId(toAccount.getId())
-        .amount(amount)
-        .build();
   }
 }
