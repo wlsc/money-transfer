@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @Slf4j
 @SuppressWarnings("PMD.BeanMembersShouldSerialize")
-public class AccountManagement {
+public class AccountManagementEndpoint {
 
   static final String ACCOUNTS = "/accounts";
   static final String TRANSFER_MONEY_FROM_TO_ACCOUNT = "/accounts/transfer";
@@ -39,7 +39,7 @@ public class AccountManagement {
   private final ObjectMapper objectMapper;
 
   @Inject
-  public AccountManagement(final ObjectMapper objectMapper) {
+  public AccountManagementEndpoint(final ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
   }
 

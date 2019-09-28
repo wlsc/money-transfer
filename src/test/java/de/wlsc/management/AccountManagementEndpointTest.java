@@ -1,7 +1,7 @@
 package de.wlsc.management;
 
-import static de.wlsc.management.AccountManagement.ACCOUNTS;
-import static de.wlsc.management.AccountManagement.TRANSFER_MONEY_FROM_TO_ACCOUNT;
+import static de.wlsc.management.AccountManagementEndpoint.ACCOUNTS;
+import static de.wlsc.management.AccountManagementEndpoint.TRANSFER_MONEY_FROM_TO_ACCOUNT;
 import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpRequest.GET;
 import static io.micronaut.http.HttpRequest.POST;
@@ -41,7 +41,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @MicronautTest
-class AccountManagementTest {
+class AccountManagementEndpointTest {
 
   private static final TypeReference<List<Account>> LIST_ACCOUNTS_REFERENCE = new TypeReference<>() {
   };
