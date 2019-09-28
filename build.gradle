@@ -15,7 +15,6 @@ plugins {
     id 'eclipse'
     id 'jacoco'
     id 'checkstyle'
-    id 'pmd'
 }
 
 apply plugin: "com.github.spotbugs"
@@ -103,12 +102,6 @@ checkstyle {
 spotbugs {
     toolVersion = "${spotbugsVersion}"
     spotbugsTest.enabled = false
-}
-
-pmd {
-    toolVersion = "${pmdVersion}"
-    pmdTest.enabled = false
-    incrementalAnalysis = true
 }
 
 wrapper {
