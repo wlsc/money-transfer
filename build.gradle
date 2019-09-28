@@ -1,7 +1,6 @@
 buildscript {
     repositories {
         mavenLocal()
-        mavenCentral()
         gradlePluginPortal()
     }
     dependencies {
@@ -37,6 +36,7 @@ targetCompatibility = 11
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter()
 }
 
 configurations {
