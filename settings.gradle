@@ -1,1 +1,8 @@
-rootProject.name="money-transfer"
+pluginManagement {
+    plugins {
+        id 'com.github.johnrengelman.shadow' version "${shadowPluginVersion}"
+        id 'com.github.spotbugs' version "${spotbugsPluginVersion}"
+    }
+}
+
+rootProject.name = "money-transfer"

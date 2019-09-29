@@ -1,23 +1,12 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        gradlePluginPortal()
-    }
-    dependencies {
-        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:${spotbugsPluginVersion}"
-    }
-}
-
 plugins {
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.github.johnrengelman.shadow"
     id 'application'
     id 'idea'
     id 'eclipse'
     id 'jacoco'
     id 'checkstyle'
+    id 'com.github.spotbugs'
 }
-
-apply plugin: "com.github.spotbugs"
 
 idea {
     module {
